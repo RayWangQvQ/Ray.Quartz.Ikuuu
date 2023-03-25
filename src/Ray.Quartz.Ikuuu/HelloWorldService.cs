@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
@@ -11,11 +8,6 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Ray.Quartz.Ikuuu.Agents;
 using Ray.Quartz.Ikuuu.Configs;
-using Ray.Quartz.Ikuuu.DomainService;
-using Ray.Quartz.Ikuuu.Helpers;
-using Ray.Quartz.Ikuuu.Models;
-using Ray.Quartz.Ikuuu.Statistics;
-using Serilog;
 using Volo.Abp.DependencyInjection;
 
 namespace Ray.Quartz.Ikuuu;
@@ -24,21 +16,16 @@ public class HelloWorldService : ITransientDependency
 {
     private readonly IConfiguration _configuration;
     private readonly IIkuuuApi _hostlocApi;
-    private readonly CookieManager _cookieManager;
-    private readonly KickOptions _kickOptions;
     private readonly AccountOptions _accountConfig;
 
     public HelloWorldService(
         IConfiguration configuration,
         IIkuuuApi hostlocApi,
-        IOptions<AccountOptions> accountOptions,
-        CookieManager cookieManager,
-        IOptions<KickOptions> kickOptions)
+        IOptions<AccountOptions> accountOptions
+        )
     {
         _configuration = configuration;
         _hostlocApi = hostlocApi;
-        _cookieManager = cookieManager;
-        _kickOptions = kickOptions.Value;
         _accountConfig = accountOptions.Value;
         Logger = NullLogger<HelloWorldService>.Instance;
     }
@@ -54,10 +41,10 @@ public class HelloWorldService : ITransientDependency
         switch (taskName)
         {
             case "checkin":
-                var re = await LoginAsync();
+                var re = await LoginAsync(cancellationToken);
                 if (re)
                 {
-                    await CheckinAsync();
+                    await CheckinAsync(cancellationToken);
                 }
                 break;
             default:
@@ -70,7 +57,7 @@ public class HelloWorldService : ITransientDependency
     /// 登录获取Cookie
     /// </summary>
     /// <returns></returns>
-    public async Task<bool> LoginAsync()
+    public async Task<bool> LoginAsync(CancellationToken cancellationToken)
     {
         Logger.LogInformation("开始任务：登录");
         Logger.LogInformation(_accountConfig.Email);
@@ -91,7 +78,7 @@ public class HelloWorldService : ITransientDependency
             Logger.LogError("登录失败：{msg}", re.Content?.msg ?? "");
             return false;
         }
-        Logger.LogInformation("登录成功！");
+        Logger.LogInformation("{msg}", re.Content?.msg ?? "登录成功！");
         Logger.LogInformation("Success{newLine}", Environment.NewLine);
 
         return true;
@@ -101,7 +88,7 @@ public class HelloWorldService : ITransientDependency
     /// 签到
     /// </summary>
     /// <returns></returns>
-    public async Task CheckinAsync()
+    public async Task CheckinAsync(CancellationToken cancellationToken)
     {
         Logger.LogInformation("开始签到");
         var re2 = await _hostlocApi.CheckinAsync();
@@ -120,7 +107,7 @@ public class HelloWorldService : ITransientDependency
             return;
         }
 
-        Logger.LogInformation("签到成功！");
+        Logger.LogInformation("{msg}", re2.Content?.msg ?? "签到成功！");
         Logger.LogInformation("Success{newLine}", Environment.NewLine);
     }
 }
