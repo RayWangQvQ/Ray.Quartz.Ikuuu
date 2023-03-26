@@ -16,6 +16,9 @@ public class Program
     {
         Log.Logger = new LoggerConfiguration()
             .MinimumLevel.Information()
+#if DEBUG
+            .MinimumLevel.Debug()
+#endif
             .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
             .Enrich.FromLogContext()
             .WriteTo.Async(c =>
@@ -23,7 +26,7 @@ public class Program
                 c.File($"Logs/{DateTime.Now.ToString("yyyy-MM-dd")}/{DateTime.Now.ToString("HH-mm-ss")}.txt",
                     restrictedToMinimumLevel: LogEventLevel.Debug);
             })
-            .WriteTo.Async(c => c.Console())
+            .WriteTo.Console()
             .CreateLogger();
 
         try

@@ -34,31 +34,18 @@ public class HelloWorldService : ITransientDependency
     public ILogger<HelloWorldService> Logger { get; set; }
 
 
-    public async Task SayHelloAsync(CancellationToken cancellationToken)
+    public async Task SayHelloAsync(AccountOptions account, CancellationToken cancellationToken)
     {
         Logger.LogInformation("Hello World!{newLine}", Environment.NewLine);
-
-        if (_accountConfigList.Count <= 0)
-        {
-            Logger.LogWarning("一个账号没配你运行个卵");
-            return;
-        }
 
         var taskName = _configuration["Run"];
         switch (taskName)
         {
             case "checkin":
-                for (int i = 0; i < _accountConfigList.Count; i++)
+                var re = await LoginAsync(account, cancellationToken);
+                if (re)
                 {
-                    Logger.LogInformation("========账号{count}========", i + 1);
-                    AccountOptions account = _accountConfigList[i];
-                    Logger.LogInformation("用户名：{userName}", account.Email);
-                    var re = await LoginAsync(account, cancellationToken);
-                    if (re)
-                    {
-                        await CheckinAsync(account, cancellationToken);
-                    }
-                    Logger.LogInformation("========账号{count}结束========{newLine}", i + 1, Environment.NewLine);
+                    await CheckinAsync(account, cancellationToken);
                 }
                 break;
             default:

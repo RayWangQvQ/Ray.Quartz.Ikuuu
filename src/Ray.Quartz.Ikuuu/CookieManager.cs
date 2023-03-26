@@ -1,18 +1,32 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 
 namespace Ray.Quartz.Ikuuu
 {
     public class CookieManager
     {
-        /// <summary>
-        /// abc=123 expires=Sun, 11-Sep-2022 14:55:58 GMT; Max-Age=2592000; path=/; secure; HttpOnly;
-        /// </summary>
-        public List<string> CookieList { get; set; } = new List<string>();
+        public int Index { get; set; }
 
-        public string CookieStr => CookieList?
-            .Select(x => x.Substring(0, x.IndexOf(";", StringComparison.Ordinal) + 1))
-            .JoinAsString("");
+        public Dictionary<int, string> CookieStrDic { get; set; } = new Dictionary<int, string>();
+
+        public string GetCurrentCookieStr()
+        {
+            var re = CookieStrDic[Index];
+
+            if (re == null)
+            {
+                CookieStrDic[Index] = "";
+                re = CookieStrDic[Index];
+            }
+
+            return re;
+        }
+
+        public void Add(int index, string ckStr)
+        {
+            CookieStrDic[index] = ckStr;
+        }
     }
 }

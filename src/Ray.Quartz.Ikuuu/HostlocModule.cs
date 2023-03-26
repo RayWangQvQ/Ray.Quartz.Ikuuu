@@ -34,20 +34,22 @@ public class HostlocModule : AbpModule
 
         context.Services.Configure<List<AccountOptions>>(config.GetSection("Accounts"));
         context.Services.Configure<HttpClientCustomOptions>(config.GetSection("HttpCustomConfig"));
-        context.Services.Configure<KickOptions>(config.GetSection("Kick"));
 
         #endregion
 
         #region Api
-        context.Services.AddScoped<DelayHttpMessageHandler>();
-        context.Services.AddScoped<LogHttpMessageHandler>();
-        context.Services.AddScoped<ProxyHttpClientHandler>();
+        context.Services.AddSingleton<CookieManager>();
+
+        context.Services.AddTransient<DelayHttpMessageHandler>();
+        context.Services.AddTransient<LogHttpMessageHandler>();
+        context.Services.AddTransient<ProxyHttpClientHandler>();
+        context.Services.AddTransient<CookieHttpClientHandler>();
         context.Services
             .AddRefitClient<IIkuuuApi>()
             .ConfigureHttpClient(c =>
             {
                 c.BaseAddress = new Uri("https://ikuuu.eu");
-
+                
                 var ua = config["UserAgent"];
                 if (!string.IsNullOrWhiteSpace(ua))
                     c.DefaultRequestHeaders.UserAgent.ParseAdd(ua);
@@ -55,6 +57,7 @@ public class HostlocModule : AbpModule
             .AddHttpMessageHandler<DelayHttpMessageHandler>()
             .AddHttpMessageHandler<LogHttpMessageHandler>()
             .ConfigurePrimaryHttpMessageHandler<ProxyHttpClientHandler>()
+            .ConfigurePrimaryHttpMessageHandler<CookieHttpClientHandler>()
             ;
         #endregion
 
