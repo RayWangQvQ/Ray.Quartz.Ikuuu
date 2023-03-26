@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net;
+using System.Security.Principal;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
@@ -71,6 +72,8 @@ public class HostlocHostedService : IHostedService
             await helloWorldService.SayHelloAsync(account, cancellationToken);
 
             _logger.LogInformation("========账号{count}结束========{newLine}", i + 1, Environment.NewLine);
+
+            _logger.LogInformation("·开始推送·{task}·{user}", $"{_configuration["Run"]}任务", account.Email);
         }
         _hostApplicationLifetime.StopApplication();
     }

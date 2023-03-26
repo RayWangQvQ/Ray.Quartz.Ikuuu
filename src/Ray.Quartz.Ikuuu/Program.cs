@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Configuration.EnvironmentVariables;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Ray.Serilog.Sinks.PushPlusBatched;
 using Serilog;
 using Serilog.Events;
 
@@ -14,6 +15,20 @@ public class Program
 {
     public static async Task<int> Main(string[] args)
     {
+        var hb = Host.CreateDefaultBuilder(args)
+            .ConfigureAppConfiguration((hostBuilderContext, configurationBuilder) =>
+            {
+                IList<IConfigurationSource> list = configurationBuilder.Sources;
+                list.ReplaceWhile(
+                    configurationSource => configurationSource is EnvironmentVariablesConfigurationSource,
+                    new EnvironmentVariablesConfigurationSource()
+                    {
+                        Prefix = "Ray_Ikuuu_"
+                    }
+                );
+            });
+        var tempHost = hb.Build();
+        var config = tempHost.Services.GetRequiredService<IConfiguration>();
         Log.Logger = new LoggerConfiguration()
             .MinimumLevel.Information()
 #if DEBUG
@@ -27,18 +42,24 @@ public class Program
                     restrictedToMinimumLevel: LogEventLevel.Debug);
             })
             .WriteTo.Console()
+            .WriteTo.PushPlusBatched(
+                config["Notify:PushPlus:Token"],
+                config["Notify:PushPlus:Channel"],
+                config["Notify:PushPlus:Topic"],
+                config["Notify:PushPlus:Webhook"],
+                restrictedToMinimumLevel: LogEventLevel.Information
+            )
             .CreateLogger();
-
         try
         {
-            Log.Information("Starting console host.");
+            Console.WriteLine("Starting console host.");
 
             await Host.CreateDefaultBuilder(args)
                 .ConfigureAppConfiguration((hostBuilderContext, configurationBuilder) =>
                 {
                     IList<IConfigurationSource> list = configurationBuilder.Sources;
                     list.ReplaceWhile(
-                        configurationSource=> configurationSource is EnvironmentVariablesConfigurationSource,
+                        configurationSource => configurationSource is EnvironmentVariablesConfigurationSource,
                         new EnvironmentVariablesConfigurationSource()
                         {
                             Prefix = "Ray_Ikuuu_"
@@ -57,6 +78,7 @@ public class Program
         catch (Exception ex)
         {
             Log.Fatal(ex, "Host terminated unexpectedly!");
+            Log.Logger.Fatal("·开始推送·{task}·{user}", "任务异常", "");
             return 1;
         }
         finally

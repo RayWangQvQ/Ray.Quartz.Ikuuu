@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net;
 using System.Net.Http;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -25,7 +26,11 @@ namespace Ray.Quartz.Ikuuu.Agents
             _logger.LogDebug("CkStr:{ckStr}", _ckManager.GetCurrentCookieStr());
 
             var uri = new Uri("https://ikuuu.eu");
-            this.CookieContainer.SetCookies(uri, _ckManager.GetCurrentCookieStr());
+            Type type = this.CookieContainer.GetType();
+            BindingFlags flags = BindingFlags.NonPublic | BindingFlags.Instance;
+            var m = type.GetMethod("DomainTableCleanup", flags);
+            m.Invoke(this.CookieContainer, null);
+            this.CookieContainer.SetCookies(uri, _ckManager.GetCurrentCookieStr());//todo
             //this.UseCookies = true;
             _logger.LogDebug("CkContainer before：{ck}", this.CookieContainer.GetAllCookies().ToJsonStr());
 
