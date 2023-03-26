@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -31,7 +32,7 @@ public class HostlocModule : AbpModule
 
         #region config
 
-        context.Services.Configure<AccountOptions>(config.GetSection("Account"));
+        context.Services.Configure<List<AccountOptions>>(config.GetSection("Accounts"));
         context.Services.Configure<HttpClientCustomOptions>(config.GetSection("HttpCustomConfig"));
         context.Services.Configure<KickOptions>(config.GetSection("Kick"));
 

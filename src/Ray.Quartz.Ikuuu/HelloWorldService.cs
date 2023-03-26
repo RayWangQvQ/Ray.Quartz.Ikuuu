@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -16,17 +17,17 @@ public class HelloWorldService : ITransientDependency
 {
     private readonly IConfiguration _configuration;
     private readonly IIkuuuApi _hostlocApi;
-    private readonly AccountOptions _accountConfig;
+    private readonly List<AccountOptions> _accountConfigList;
 
     public HelloWorldService(
         IConfiguration configuration,
         IIkuuuApi hostlocApi,
-        IOptions<AccountOptions> accountOptions
+        IOptions<List<AccountOptions>> accountOptionsList
         )
     {
         _configuration = configuration;
         _hostlocApi = hostlocApi;
-        _accountConfig = accountOptions.Value;
+        _accountConfigList = accountOptionsList.Value;
         Logger = NullLogger<HelloWorldService>.Instance;
     }
 
@@ -37,14 +38,27 @@ public class HelloWorldService : ITransientDependency
     {
         Logger.LogInformation("Hello World!{newLine}", Environment.NewLine);
 
+        if (_accountConfigList.Count <= 0)
+        {
+            Logger.LogWarning("一个账号没配你运行个卵");
+            return;
+        }
+
         var taskName = _configuration["Run"];
         switch (taskName)
         {
             case "checkin":
-                var re = await LoginAsync(cancellationToken);
-                if (re)
+                for (int i = 0; i < _accountConfigList.Count; i++)
                 {
-                    await CheckinAsync(cancellationToken);
+                    Logger.LogInformation("========账号{count}========", i + 1);
+                    AccountOptions account = _accountConfigList[i];
+                    Logger.LogInformation("用户名：{userName}", account.Email);
+                    var re = await LoginAsync(account, cancellationToken);
+                    if (re)
+                    {
+                        await CheckinAsync(account, cancellationToken);
+                    }
+                    Logger.LogInformation("========账号{count}结束========{newLine}", i + 1, Environment.NewLine);
                 }
                 break;
             default:
@@ -57,12 +71,12 @@ public class HelloWorldService : ITransientDependency
     /// 登录获取Cookie
     /// </summary>
     /// <returns></returns>
-    public async Task<bool> LoginAsync(CancellationToken cancellationToken)
+    public async Task<bool> LoginAsync(AccountOptions account, CancellationToken cancellationToken)
     {
         Logger.LogInformation("开始任务：登录");
-        Logger.LogInformation(_accountConfig.Email);
+        Logger.LogInformation(account.Email);
 
-        var req = new LoginRequest(_accountConfig.Email, _accountConfig.Pwd);
+        var req = new LoginRequest(account.Email, account.Pwd);
         var re = await _hostlocApi.LoginAsync(req);
 
         if (!re.IsSuccessStatusCode)
@@ -88,7 +102,7 @@ public class HelloWorldService : ITransientDependency
     /// 签到
     /// </summary>
     /// <returns></returns>
-    public async Task CheckinAsync(CancellationToken cancellationToken)
+    public async Task CheckinAsync(AccountOptions account, CancellationToken cancellationToken)
     {
         Logger.LogInformation("开始签到");
         var re2 = await _hostlocApi.CheckinAsync();
