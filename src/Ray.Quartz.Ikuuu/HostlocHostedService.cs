@@ -52,6 +52,7 @@ public class HostlocHostedService : IHostedService
 
         var accountOptionsList = _abpApplication.ServiceProvider.GetRequiredService<IOptions<List<AccountOptions>>>().Value;
         var ckManager = _abpApplication.ServiceProvider.GetRequiredService<CookieManager>();
+        var ckFactory = _abpApplication.ServiceProvider.GetRequiredService<CookieStrFactory>();
 
         if (accountOptionsList.Count <= 0)
         {
@@ -64,6 +65,8 @@ public class HostlocHostedService : IHostedService
             _logger.LogInformation("========账号{count}========", i + 1);
             ckManager.Add(i,"");
             ckManager.Index = i;
+            ckFactory.Add("");
+            ckFactory.CurrentNum = i + 1;
             AccountOptions account = accountOptionsList[i];
             _logger.LogInformation("用户名：{userName}", account.Email);
 
