@@ -1,11 +1,10 @@
-﻿using System;
+﻿using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 
 namespace Ray.Quartz.Ikuuu.Agents
 {
@@ -18,28 +17,26 @@ namespace Ray.Quartz.Ikuuu.Agents
         {
             _logger = logger;
             _ckManager = ckManager;
+
+            this.UseCookies = true;
         }
 
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
-            _logger.LogDebug("CkContainer before：{ck}", this.CookieContainer.GetAllCookies().ToJsonStr());
-            _logger.LogDebug("CkStr:{ckStr}", _ckManager.GetCurrentCookieStr());
+            this.CookieContainer.GetAllCookies().ToList().ForEach(x=>x.Expired=true);
+            if (this.CookieContainer.Count>0)
+            {
+                var m = this.CookieContainer.GetType().GetMethod("AgeCookies", BindingFlags.NonPublic | BindingFlags.Instance);
+                m.Invoke(this.CookieContainer, new object[]{null});
+            }
 
-            var uri = new Uri("https://ikuuu.eu");
-            Type type = this.CookieContainer.GetType();
-            BindingFlags flags = BindingFlags.NonPublic | BindingFlags.Instance;
-            var m = type.GetMethod("DomainTableCleanup", flags);
-            m.Invoke(this.CookieContainer, null);
-            this.CookieContainer.SetCookies(uri, _ckManager.GetCurrentCookieStr());//todo
-            //this.UseCookies = true;
-            _logger.LogDebug("CkContainer before：{ck}", this.CookieContainer.GetAllCookies().ToJsonStr());
+            this.CookieContainer.Add(_ckManager.CurrentAccount.MyCookieContainer.GetAllCookies());
 
-            var re = await base.SendAsync(request, cancellationToken);
+            HttpResponseMessage re = await base.SendAsync(request, cancellationToken);
 
-            CookieCollection cookies = this.CookieContainer.GetAllCookies();
-            _logger.LogDebug("CkContainer after：{cookie}", cookies.ToJsonStr());
-            _ckManager.Add(_ckManager.Index, this.CookieContainer.GetCookieHeader(uri));
-            _logger.LogDebug(_ckManager.ToJsonStr());
+            CookieContainer cc = new CookieContainer();
+            cc.Add(this.CookieContainer.GetAllCookies());
+            _ckManager.CurrentAccount.MyCookieContainer = cc;
 
             return re;
         }

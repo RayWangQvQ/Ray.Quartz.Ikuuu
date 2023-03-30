@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Net;
-using System.Security.Principal;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
@@ -59,12 +58,13 @@ public class HostlocHostedService : IHostedService
             return;
         }
 
+        ckManager.Init(accountOptionsList.Select(x => new AccountInfo(x.Email, x.Pwd)).ToList());
+
         for (int i = 0; i < accountOptionsList.Count; i++)
         {
             _logger.LogInformation("========账号{count}========", i + 1);
-            ckManager.Add(i,"");
-            ckManager.Index = i;
             AccountOptions account = accountOptionsList[i];
+            ckManager.Index = i;
             _logger.LogInformation("用户名：{userName}", account.Email);
 
             using var scope = _abpApplication.ServiceProvider.CreateScope();

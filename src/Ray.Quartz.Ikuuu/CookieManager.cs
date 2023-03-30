@@ -9,24 +9,37 @@ namespace Ray.Quartz.Ikuuu
     {
         public int Index { get; set; }
 
-        public Dictionary<int, string> CookieStrDic { get; set; } = new Dictionary<int, string>();
+        public Dictionary<int, AccountInfo> CookieContainerDic { get; set; } = new Dictionary<int, AccountInfo>();
 
-        public string GetCurrentCookieStr()
+        public void Init(List<AccountInfo> accounts)
         {
-            var re = CookieStrDic[Index];
-
-            if (re == null)
+            for (int i = 0; i < accounts.Count; i++)
             {
-                CookieStrDic[Index] = "";
-                re = CookieStrDic[Index];
+                CookieContainerDic[i] = accounts[i];
             }
-
-            return re;
         }
 
-        public void Add(int index, string ckStr)
+        public AccountInfo CurrentAccount => CookieContainerDic[Index];
+    }
+
+    public class AccountInfo
+    {
+        public AccountInfo(string userName, string pwd, CookieContainer cookieContainer = null)
         {
-            CookieStrDic[index] = ckStr;
+            UserName = userName;
+            Pwd = pwd;
+            MyCookieContainer = cookieContainer ?? new CookieContainer();
+        }
+
+        public CookieContainer MyCookieContainer { get; set; }
+
+        public string UserName { get; set; }
+
+        public string Pwd { get; set; }
+
+        public CookieContainer CloneCookieContainer()
+        {
+            return this.MyCookieContainer.ToJsonStr().JsonDeserialize<CookieContainer>();
         }
     }
 }
