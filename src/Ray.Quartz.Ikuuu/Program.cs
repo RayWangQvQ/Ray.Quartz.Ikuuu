@@ -6,6 +6,9 @@ using Microsoft.Extensions.Configuration.EnvironmentVariables;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Ray.Serilog.Sinks.PushPlusBatched;
+using Ray.Serilog.Sinks.ServerChanBatched;
+using Ray.Serilog.Sinks.TelegramBatched;
+using Ray.Serilog.Sinks.WorkWeiXinBatched;
 using Serilog;
 using Serilog.Events;
 
@@ -47,6 +50,21 @@ public class Program
                 config["Notify:PushPlus:Channel"],
                 config["Notify:PushPlus:Topic"],
                 config["Notify:PushPlus:Webhook"],
+                restrictedToMinimumLevel: LogEventLevel.Information
+            )
+            .WriteTo.TelegramBatched(
+                config["Notify:Telegram:BotToken"],
+                config["Notify:Telegram:ChatId"],
+                config["Notify:Telegram:Proxy"],
+                restrictedToMinimumLevel: LogEventLevel.Information
+            )
+            .WriteTo.ServerChanBatched(
+                "",
+                turboScKey: config["Notify:ServerChan:TurboScKey"],
+                restrictedToMinimumLevel: LogEventLevel.Information
+            )
+            .WriteTo.WorkWeiXinBatched(
+                config["Notify:WorkWeiXin:WebHookUrl"],
                 restrictedToMinimumLevel: LogEventLevel.Information
             )
             .CreateLogger();

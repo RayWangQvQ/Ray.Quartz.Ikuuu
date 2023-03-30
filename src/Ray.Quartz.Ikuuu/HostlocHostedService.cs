@@ -51,6 +51,7 @@ public class HostlocHostedService : IHostedService
 
         var accountOptionsList = _abpApplication.ServiceProvider.GetRequiredService<IOptions<List<AccountOptions>>>().Value;
         var ckManager = _abpApplication.ServiceProvider.GetRequiredService<CookieManager>();
+        var ckFactory = _abpApplication.ServiceProvider.GetRequiredService<CookieStrFactory>();
 
         if (accountOptionsList.Count <= 0)
         {
