@@ -12,12 +12,10 @@ namespace Ray.Quartz.Ikuuu.Agents
     {
         private readonly ILogger<CookieHttpClientHandler> _logger;
         private readonly CookieManager _ckManager;
-        private readonly CookieInfo _ckInfo;
 
         public CookieHttpClientHandler(
             ILogger<CookieHttpClientHandler> logger, 
-            CookieManager ckManager, 
-            CookieInfo ckInfo
+            CookieManager ckManager
             )
         {
             _logger = logger;
