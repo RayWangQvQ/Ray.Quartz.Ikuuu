@@ -11,11 +11,11 @@ namespace Ray.Quartz.Ikuuu.Agents
     public class CookieHttpClientHandler : HttpClientHandler
     {
         private readonly ILogger<CookieHttpClientHandler> _logger;
-        private readonly CookieManager _ckManager;
+        private readonly TargetAccountManager<TargetAccountInfo> _ckManager;
 
         public CookieHttpClientHandler(
             ILogger<CookieHttpClientHandler> logger, 
-            CookieManager ckManager
+            TargetAccountManager<TargetAccountInfo> ckManager
             )
         {
             _logger = logger;
@@ -26,20 +26,11 @@ namespace Ray.Quartz.Ikuuu.Agents
 
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
-            this.CookieContainer.GetAllCookies().ToList().ForEach(x=>x.Expired=true);
-            if (this.CookieContainer.Count>0)
-            {
-                var m = this.CookieContainer.GetType().GetMethod("AgeCookies", BindingFlags.NonPublic | BindingFlags.Instance);
-                m.Invoke(this.CookieContainer, new object[]{null});
-            }
-
-            this.CookieContainer.Add(_ckManager.CurrentAccount.MyCookieContainer.GetAllCookies());
+            _ckManager.ReplaceCookieContainerWithCurrentAccount(this.CookieContainer);
 
             HttpResponseMessage re = await base.SendAsync(request, cancellationToken);
 
-            CookieContainer cc = new CookieContainer();
-            cc.Add(this.CookieContainer.GetAllCookies());
-            _ckManager.CurrentAccount.MyCookieContainer = cc;
+            _ckManager.UpdateCurrentCookieContainer(this.CookieContainer);
 
             return re;
         }

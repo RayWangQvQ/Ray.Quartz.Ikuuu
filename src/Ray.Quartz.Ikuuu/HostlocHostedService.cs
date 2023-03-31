@@ -50,31 +50,29 @@ public class HostlocHostedService : IHostedService
         await _abpApplication.InitializeAsync();
 
         var accountOptionsList = _abpApplication.ServiceProvider.GetRequiredService<IOptions<List<AccountOptions>>>().Value;
-        var ckManager = _abpApplication.ServiceProvider.GetRequiredService<CookieManager>();
-        var ckFactory = _abpApplication.ServiceProvider.GetRequiredService<CookieStrFactory>();
+        var ckManager = _abpApplication.ServiceProvider.GetRequiredService<TargetAccountManager<TargetAccountInfo>>();
+        ckManager.Init(accountOptionsList.Select(x => new TargetAccountInfo(x.Email, x.Pwd)).ToList());
 
-        if (accountOptionsList.Count <= 0)
+        if (ckManager.Count <= 0)
         {
             _logger.LogWarning("一个账号没配你运行个卵");
             return;
         }
 
-        ckManager.Init(accountOptionsList.Select(x => new AccountInfo(x.Email, x.Pwd)).ToList());
-
         for (int i = 0; i < accountOptionsList.Count; i++)
         {
-            _logger.LogInformation("========账号{count}========", i + 1);
-            AccountOptions account = accountOptionsList[i];
             ckManager.Index = i;
-            _logger.LogInformation("用户名：{userName}", account.Email);
+            var currentAccount = ckManager.CurrentTargetAccount;
+            _logger.LogInformation("========账号{count}========", i + 1);
+            _logger.LogInformation("用户名：{userName}", currentAccount.UserName);
 
             using var scope = _abpApplication.ServiceProvider.CreateScope();
             var helloWorldService = scope.ServiceProvider.GetRequiredService<HelloWorldService>();
-            await helloWorldService.SayHelloAsync(account, cancellationToken);
+            await helloWorldService.SayHelloAsync(cancellationToken);
 
             _logger.LogInformation("========账号{count}结束========{newLine}", i + 1, Environment.NewLine);
 
-            _logger.LogInformation("·开始推送·{task}·{user}", $"{_configuration["Run"]}任务", account.Email);
+            _logger.LogInformation("·开始推送·{task}·{user}", $"{_configuration["Run"]}任务", currentAccount.UserName);
         }
         _hostApplicationLifetime.StopApplication();
     }

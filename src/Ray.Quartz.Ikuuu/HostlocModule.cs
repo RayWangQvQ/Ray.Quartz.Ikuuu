@@ -28,7 +28,7 @@ public class HostlocModule : AbpModule
 
         var config = context.Services.GetConfiguration();
 
-        context.Services.AddSingleton<CookieManager>();
+        context.Services.AddSingleton(typeof(TargetAccountManager<>));
 
         #region config
 
@@ -38,7 +38,7 @@ public class HostlocModule : AbpModule
         #endregion
 
         #region Api
-        context.Services.AddSingleton<CookieManager>();
+        context.Services.AddSingleton<TargetAccountManager<TargetAccountInfo>>();
 
         context.Services.AddTransient<DelayHttpMessageHandler>();
         context.Services.AddTransient<LogHttpMessageHandler>();

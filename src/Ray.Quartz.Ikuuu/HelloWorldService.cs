@@ -17,24 +17,23 @@ public class HelloWorldService : ITransientDependency
 {
     private readonly IConfiguration _configuration;
     private readonly IIkuuuApi _hostlocApi;
-    private readonly List<AccountOptions> _accountConfigList;
+    private readonly TargetAccountInfo _targetAccount;
 
     public HelloWorldService(
         IConfiguration configuration,
         IIkuuuApi hostlocApi,
-        IOptions<List<AccountOptions>> accountOptionsList
+        TargetAccountManager<TargetAccountInfo> targetAccountManager
         )
     {
         _configuration = configuration;
         _hostlocApi = hostlocApi;
-        _accountConfigList = accountOptionsList.Value;
+        _targetAccount = targetAccountManager.CurrentTargetAccount;
         Logger = NullLogger<HelloWorldService>.Instance;
     }
 
     public ILogger<HelloWorldService> Logger { get; set; }
 
-
-    public async Task SayHelloAsync(AccountOptions account, CancellationToken cancellationToken)
+    public async Task SayHelloAsync(CancellationToken cancellationToken)
     {
         Logger.LogInformation("Hello World!{newLine}", Environment.NewLine);
 
@@ -42,10 +41,10 @@ public class HelloWorldService : ITransientDependency
         switch (taskName)
         {
             case "checkin":
-                var re = await LoginAsync(account, cancellationToken);
+                var re = await LoginAsync(cancellationToken);
                 if (re)
                 {
-                    await CheckinAsync(account, cancellationToken);
+                    await CheckinAsync(cancellationToken);
                 }
                 break;
             default:
@@ -58,12 +57,12 @@ public class HelloWorldService : ITransientDependency
     /// 登录获取Cookie
     /// </summary>
     /// <returns></returns>
-    public async Task<bool> LoginAsync(AccountOptions account, CancellationToken cancellationToken)
+    public async Task<bool> LoginAsync(CancellationToken cancellationToken)
     {
         Logger.LogInformation("开始任务：登录");
-        Logger.LogInformation(account.Email);
+        Logger.LogInformation(_targetAccount.UserName);
 
-        var req = new LoginRequest(account.Email, account.Pwd);
+        var req = new LoginRequest(_targetAccount.UserName, _targetAccount.Pwd);
         var re = await _hostlocApi.LoginAsync(req);
 
         if (!re.IsSuccessStatusCode)
@@ -89,7 +88,7 @@ public class HelloWorldService : ITransientDependency
     /// 签到
     /// </summary>
     /// <returns></returns>
-    public async Task CheckinAsync(AccountOptions account, CancellationToken cancellationToken)
+    public async Task CheckinAsync(CancellationToken cancellationToken)
     {
         Logger.LogInformation("开始签到");
         var re2 = await _hostlocApi.CheckinAsync();
