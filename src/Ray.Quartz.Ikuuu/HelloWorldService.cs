@@ -7,6 +7,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
+using Ray.Infrastructure.AutoTask;
 using Ray.Quartz.Ikuuu.Agents;
 using Ray.Quartz.Ikuuu.Configs;
 using Volo.Abp.DependencyInjection;

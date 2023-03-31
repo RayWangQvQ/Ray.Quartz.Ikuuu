@@ -7,6 +7,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Ray.Infrastructure.AutoTask;
 using Ray.Quartz.Ikuuu.Agents;
 using Ray.Quartz.Ikuuu.Configs;
 using Ray.Quartz.Ikuuu.DomainService;

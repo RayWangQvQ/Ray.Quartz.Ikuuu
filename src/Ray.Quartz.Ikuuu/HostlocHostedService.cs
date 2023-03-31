@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Ray.Infrastructure.AutoTask;
 using Ray.Quartz.Ikuuu.Configs;
 using Serilog;
 using Volo.Abp;
