@@ -49,8 +49,8 @@ public class HostlocModule : AbpModule
             .AddRefitClient<IIkuuuApi>()
             .ConfigureHttpClient(c =>
             {
-                c.BaseAddress = new Uri("https://ikuuu.eu");
-                
+                c.BaseAddress = new Uri(config["Host"] ?? "https://ikuuu.art");
+
                 var ua = config["UserAgent"];
                 if (!string.IsNullOrWhiteSpace(ua))
                     c.DefaultRequestHeaders.UserAgent.ParseAdd(ua);
